@@ -52,7 +52,7 @@ wise_people = ['Lina Corrales', 'Esther Velásquez', 'Lina y Esther']
 
 digitizers = ['Esther', 'Dana', 'Jose', 'Lina', 'MariaP', 'Natalia', 'Nelson']
 
-subplots = ['2x2', '3x3', '6x6', '13x13', '20x20']
+cuadrants = [1, 2, 3]
 
 id_observaciones = []
 
@@ -137,69 +137,51 @@ def validate_rec():
 	st.session_state.errors_rec = ""
 	in_trouble = False
 
-	if st.session_state.par is None:
-		st.session_state.errors_rec += 'El número de parcela es un campo obligatorio.\n\n'
+	if st.session_state.trans is None:
+		st.session_state.errors_rec += 'El número de transecto es un campo obligatorio.\n\n'
 		in_trouble = True
 
-	if st.session_state.subpar is None:
-		st.session_state.errors_rec += 'La categoría de subparcela es un campo obligatorio.\n\n'
-		in_trouble = True
+	#if st.session_state.cuadr is None:
+		#st.session_state.errors_rec += 'El número de cuadrante es un campo obligatorio.\n\n'
+		#in_trouble = True
 
 	if st.session_state.ind is None:
 		st.session_state.errors_rec += 'El número de individuo es un campo obligatorio.\n\n'
 		in_trouble = True
 
+	if st.session_state.ubic is None:
+		st.session_state.errors_rec += 'La ubicación del individuo es un campo obligatorio.\n\n'
+		in_trouble = True
+
 	if st.session_state.grow is None:
-		st.session_state.errors_rec += 'La forma de crecimiento es un campo obligatorio.\n\n'
+		st.session_state.errors_rec += 'El hábito es un campo obligatorio.\n\n'
 		in_trouble = True
 
 	if st.session_state.morfo is None:	
 		st.session_state.errors_rec += 'El morfo o descripción de campo es un dato obligatorio.\n\n'
 		in_trouble = True
 
-	if st.session_state.subpar in ['3x3', '6x6', '13x13', '20x20'] and \
-		st.session_state.alt is None:
-
-		st.session_state.errors_rec += 'La altura del individuo es un campo obligatorio para subparcelas no herbáceas rasantes.\n\n'
+	if st.session_state.alt is None:
+		st.session_state.errors_rec += 'La altura del individuo es un dato obligatorio.\n\n'
 		in_trouble = True
 
-	elif st.session_state.subpar == '3x3' and (st.session_state.alt < 0.5 or st.session_state.alt > 1.5):
+	else:
 
-		st.session_state.errors_rec += 'La altura del individuo está por fuera del rango aceptable para la clase de subparcela.\n\n'
-		in_trouble = True
+		if st.session_state.cuadr and st.session_state.alt > 0.5:
+			st.session_state.errors_rec += 'Observaciones de cuadrantes solo son realizadas en individuos con alturas de máximo 0.5 m.\n\n'
+			in_trouble = True
 
+		if st.session_state.cuadr is None and st.session_state.alt <= 0.5:
+			st.session_state.errors_rec += 'Individuos de alturas menores o iguales a 0.5 m solo son registrados en cuadrantes.\n\n'
+			in_trouble = True
 
-	if st.session_state.subpar in ['6x6', '13x13', '20x20'] and st.session_state.cap is None:
-		st.session_state.errors_rec += 'La circuferencia a la altura de pecho es un campo obligatorio para subparcelas no herbáceas.\n\n'
-		in_trouble = True
+		if st.session_state.alt > 0.5 and (st.session_state.copax is None or st.session_state.copay is None):
+			st.session_state.errors_rec += 'Los diámetros de copas son obligatorios para individuos de alturas mayores a 0.5 m.\n\n'
+			in_trouble = True
 
-	elif st.session_state.subpar == '6x6' and (st.session_state.cap < (2.5 / 3.14159) or st.session_state.cap > (5 / 3.14159)):
-		st.session_state.errors_rec += 'El CAP del individuo está por fuera del rango aceptable para la clase de subparcela.\n\n'
-		in_trouble = True
-
-	elif st.session_state.subpar == '13x13' and (st.session_state.cap < (5 / 3.14159) or st.session_state.cap > (10 / 3.14159)):
-		st.session_state.errors_rec += 'El CAP del individuo está por fuera del rango aceptable para la clase de subparcela.\n\n'
-		in_trouble = True
-
-	elif st.session_state.subpar == '20x20' and (st.session_state.cap < (10 / 3.14159)):
-		st.session_state.errors_rec += 'El CAP del individuo está por fuera del rango aceptable para la clase de subparcela.\n\n'
-		in_trouble = True
-
-	if st.session_state.subpar in ['3x3', '6x6', '13x13', '20x20'] and st.session_state.copax is None:
-		st.session_state.errors_rec += 'El diámetro de copa horizontal es un campo obligatorio para subparcelas no herbáceas rasantes.\n\n'
-		in_trouble = True
-
-	if st.session_state.subpar in ['3x3', '6x6', '13x13', '20x20'] and st.session_state.copay is None:
-		st.session_state.errors_rec += 'El diámetro de copa vertical es un campo obligatorio para subparcelas no herbáceas rasantes.\n\n'
-		in_trouble = True
-
-	if st.session_state.subpar == '2x2' and st.session_state.cober is None:
-		st.session_state.errors_rec += 'La cobertura es un campo obligatorio para subparcelas de herbáceas rasantes.\n\n'
-		in_trouble = True
-
-	if st.session_state.pheno is None:
-		st.session_state.errors_rec += 'La fenología es un campo obligatorio.\n\n'
-		in_trouble = True
+		if st.session_state.alt <= 0.5 and st.session_state.cober is None:
+			st.session_state.errors_rec += 'La cobertura es obligatoria para individuos de alturas menores o iguales a 0.5 m.\n\n'
+			in_trouble = True
 
 	if in_trouble:
 		st.session_state.rec_ok = False
@@ -216,7 +198,6 @@ def submit():
 	
 	sh = gc.open_by_key(st.secrets.table_link).worksheet(st.session_state.digitizer)
 	now = datetime.datetime.now()
-	#Sitio	Sector	Responsables	Observaciones sitio	Fecha	Hora inicio	Hora final	Latitud	Longitud	# Parcela	Subparcela	# ind.	Forma crecimiento	Morfo	Altura (m)	CAP (cm)	Copa X (cm)	Copa Y (cm)	% Cobertura	Fenología	% Fenología	Observaciones individuo	Digitador	Fecha digitación
 	row = [
 		st.session_state.site,
 		st.session_state.sector,
@@ -234,31 +215,33 @@ def submit():
 		str(st.session_state.timef),
 		st.session_state.lat,
 		st.session_state.lon,
-		st.session_state.par,
-		st.session_state.subpar,
-		st.session_state.ind,
-		st.session_state.grow,
-		st.session_state.morfo,
-		st.session_state.alt,
-	]
-
-	if st.session_state.cap: 
-		row.append(st.session_state.cap)
+		st.session_state.trans]
+	
+	if st.session_state.cuadr:
+		row.append(st.session_state.cuadr)
 	else:
 		row.append("")
 
 	row += [
-		st.session_state.copax,
-		st.session_state.copay,
-		st.session_state.cober,
-		st.session_state.pheno,
+		st.session_state.ind,
+		st.session_state.ubic,
+		st.session_state.morfo,
+		st.session_state.alt,
 	]
-	
-	if st.session_state.per_pheno: 
-		row.append(st.session_state.per_pheno)
+
+	if st.session_state.copax: row.append(st.session_state.copax)
+	if st.session_state.copay: row.append(st.session_state.copay)
+	if st.session_state.cober: row.append(st.session_state.cober)
+
+	row += [
+		st.session_state.grow,
+	]
+
+	if st.session_state.photo: 
+		row.append(st.session_state.photo)
 	else:
 		row.append("")
-	
+
 	if st.session_state.obs_ind: 
 		row.append(st.session_state.obs_ind)
 	else:
@@ -389,6 +372,7 @@ with st.form(
 
 	with b0:
 		st.form_submit_button('Validar', on_click=validate_site)
+
 	with b1:
 		st.form_submit_button('Cambiar localidad', on_click=clear_site)
 
@@ -404,22 +388,22 @@ if st.session_state.site_ok:
 	):
 
 		st.number_input(
-			"Parcela",
-			key='par',
+			"Transecto",
+			key='trans',
 			value=None,
 			step=1,
 			min_value=1,
-			placeholder="Número de parcela",
-			help='Identificador de la parcela',
+			placeholder="Número de transecto",
+			help='Identificador del transecto',
 		)
 
 		st.selectbox(
-			"Subparcela",
-			subplots,
-			key='subpar',
+			"Cuadrante",
+			cuadrants,
+			key='cuadr',
 			index=None,
-			placeholder="Clase de subparcela",
-			help='Identificador de la subparcela',
+			placeholder="Número del cuadrante",
+			help='Identificador del cuadrante',
 		)
 
 		st.number_input(
@@ -432,13 +416,24 @@ if st.session_state.site_ok:
 			help='Identificador del individuo en el transecto',
 		)
 
+		st.number_input(
+			"Ubicación",
+			key='ubic',
+			value=None,
+			step=1,
+			min_value=1,
+			max_value=50,
+			placeholder="Ubicación del individuo",
+			help='Ubicación del individuo a lo largo del transecto, en metros',
+		)
+
 		st.selectbox(
-			"Forma de crecimiento", 
+			"Hábito", 
 			growth_forms,
 			index=None, 
 			key='grow',
-			placeholder="Seleccione una forma de crecimiento",
-			help='Formas de crcimiento de acuerdo a la documentación del proyecto.'
+			placeholder="Seleccione un hábito",
+			help='Hábito de acuerdo a la documentación del proyecto.'
 		)
 
 		st.text_input(
@@ -456,15 +451,6 @@ if st.session_state.site_ok:
 			step=0.1,
 			placeholder="Altura del individuo (m)",
 			help='Altura del individuo, proyeccción perpendicular en relación al substrato.',
-		)
-
-		st.number_input(
-			"CAP",
-			key='cap',
-			value=None,
-			step=0.1,
-			placeholder="Circunferencia a la altura de pecho (cm)",
-			help='Circunferencia (cm) de los individuos arbóreos o arbustivos a la altura de pecho ---o 1.5 m de altura---.',
 		)
 
 		st.number_input(
@@ -496,24 +482,12 @@ if st.session_state.site_ok:
 			help='Porcentaje del área de la parcela que cubre el individuo. Posibles valores: 1-100%.',
 		)
 
-		st.selectbox(
-			"Fenología", 
-			pheno,
-			index=None, 
-			key='pheno',
-			placeholder="Estado fenológico del individuo",
-			help='Posible estado fenológico del individuo.'
-		)
-
-		st.number_input(
-			"Porcentaje fenología",
-			key='per_pheno',
+		st.text_input(
+			"Foto",
+			key='photo',
 			value=None,
-			min_value=1,
-			max_value=100,
-			step=1,
-			placeholder="Estado fenológico del individuo (%).",
-			help='Posible estado fenológico del individuo. Posibles valores: 1-100%.'
+			placeholder='Fotografía del individuo',
+			help='Nombre del archivo fotográfico.'
 		)
 
 		st.text_input(
@@ -542,18 +516,17 @@ if st.session_state.site_ok:
 				f"Sector: {st.session_state.sector}",
 				f"Latitud: {st.session_state.lat}",
 				f"Longitud: {st.session_state.lon}",
-				f"Parcela: {st.session_state.par}",
-				f"Subparcela: {st.session_state.subpar}",
+				f"Transecto: {st.session_state.trans}",
+				f"Cuadrante: {st.session_state.cuadr}",
+				f"Ubicación: {st.session_state.ubic}"
 				f"Individuo: {st.session_state.ind}",
-				f"Forma de crecimiento: {st.session_state.grow}",
+				f"Hábito: {st.session_state.grow}",
 				f"Morfo: {st.session_state.morfo}",
 				f"Altura: {st.session_state.alt}",
-				#f"CAP: {st.session_state.cap}",
 				f"Copa X: {st.session_state.copax}",
 				f"Copa Y: {st.session_state.copay}",
 				f"Cobertura: {st.session_state.cober}",
-				f"Fenología: {st.session_state.pheno}",
-				#f"Observaciones individuo: {st.session_state.obs_ind}",
+				f"Observaciones individuo: {st.session_state.obs_ind}",
 			]
 
 			st.markdown("\n\n".join(bits))
