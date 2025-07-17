@@ -50,7 +50,7 @@ sitios = tabla_sitios.name.tolist()
 
 wise_people = ['Lina Corrales', 'Esther Velásquez', 'Lina y Esther']
 
-digitizers = ['Esther', 'Dana', 'Jose', 'Lina', 'MariaP', 'Natalia', 'Nelson']
+digitizers = ['Esther', 'Dana', 'Jose', 'Karen', 'Lina', 'Lizeth', 'MariaP', 'Natalia', 'Nelson']
 
 cuadrants = [1, 2, 3]
 
@@ -137,51 +137,51 @@ def validate_rec():
 	st.session_state.errors_rec = ""
 	in_trouble = False
 
+	# Número de transecto, hábito y morfo son obligatorios para todos los individuos, sean de cuadrantes o no
 	if st.session_state.trans is None:
 		st.session_state.errors_rec += 'El número de transecto es un campo obligatorio.\n\n'
-		in_trouble = True
-
-	#if st.session_state.cuadr is None:
-		#st.session_state.errors_rec += 'El número de cuadrante es un campo obligatorio.\n\n'
-		#in_trouble = True
-
-	if st.session_state.ind is None:
-		st.session_state.errors_rec += 'El número de individuo es un campo obligatorio.\n\n'
-		in_trouble = True
-
-	if st.session_state.ubic is None:
-		st.session_state.errors_rec += 'La ubicación del individuo es un campo obligatorio.\n\n'
 		in_trouble = True
 
 	if st.session_state.grow is None:
 		st.session_state.errors_rec += 'El hábito es un campo obligatorio.\n\n'
 		in_trouble = True
 
-	if st.session_state.morfo is None:	
+	if st.session_state.morfo is None or len(st.session_state.morfo) == 0:	
 		st.session_state.errors_rec += 'El morfo o descripción de campo es un dato obligatorio.\n\n'
 		in_trouble = True
 
-	if st.session_state.alt is None:
-		st.session_state.errors_rec += 'La altura del individuo es un dato obligatorio.\n\n'
-		in_trouble = True
+	if st.session_state.cuadr:
+		# Planta de cuadrante: solo es obligatorio hábito, morfo y cobertura
+		if st.session_state.cober is None:
+			st.session_state.errors_rec += 'El procentaje de cobertura es un dato obligatorio para las plantas de cuadrantes.\n\n'
+			in_trouble = True
 
-	else:
-
-		if st.session_state.cuadr and st.session_state.alt > 0.5:
+		if st.session_state.alt and st.session_state.alt > 0.5:
 			st.session_state.errors_rec += 'Observaciones de cuadrantes solo son realizadas en individuos con alturas de máximo 0.5 m.\n\n'
 			in_trouble = True
 
-		if st.session_state.cuadr is None and st.session_state.alt <= 0.5:
-			st.session_state.errors_rec += 'Individuos de alturas menores o iguales a 0.5 m solo son registrados en cuadrantes.\n\n'
+	else: 
+		# Planta fuera de cuadrantes: todo es obligatorio, excepto cobertura
+		if st.session_state.ind is None:
+			st.session_state.errors_rec += 'El número de individuo es un campo obligatorio en individuos registrados por fuera de cuadrantes.\n\n'
 			in_trouble = True
 
-		if st.session_state.alt > 0.5 and (st.session_state.copax is None or st.session_state.copay is None):
+		if st.session_state.ubic is None:
+			st.session_state.errors_rec += 'La ubicación del individuo es un campo obligatorio en individuos registrados por fuera de cuadrantes.\n\n'
+			in_trouble = True
+
+		if st.session_state.alt is None:
+			st.session_state.errors_rec += 'La altura del individuo es un dato obligatorio en individuos registrados por fuera de cuadrantes.\n\n'
+			in_trouble = True
+
+		elif st.session_state.alt <= 0.5:
+			st.session_state.errors_rec += 'Individuos de alturas menores o iguales a 0.5 m solo son registrados exclusivamente en cuadrantes.\n\n'
+			in_trouble = True
+
+		if st.session_state.copax is None or st.session_state.copay is None:
 			st.session_state.errors_rec += 'Los diámetros de copas son obligatorios para individuos de alturas mayores a 0.5 m.\n\n'
 			in_trouble = True
 
-		if st.session_state.alt <= 0.5 and st.session_state.cober is None:
-			st.session_state.errors_rec += 'La cobertura es obligatoria para individuos de alturas menores o iguales a 0.5 m.\n\n'
-			in_trouble = True
 
 	if in_trouble:
 		st.session_state.rec_ok = False
@@ -222,20 +222,39 @@ def submit():
 	else:
 		row.append("")
 
-	row += [
-		st.session_state.ind,
-		st.session_state.ubic,
-		st.session_state.morfo,
-		st.session_state.alt,
-	]
+	if st.session_state.ind:
+		row.append(st.session_state.ind)
+	else:
+		row.append("")
 
-	if st.session_state.copax: row.append(st.session_state.copax)
-	if st.session_state.copay: row.append(st.session_state.copay)
-	if st.session_state.cober: row.append(st.session_state.cober)
+	if st.session_state.ubic:
+		row.append(st.session_state.ubic)
+	else:
+		row.append("")
 
-	row += [
-		st.session_state.grow,
-	]
+	row.append(st.session_state.morfo)
+
+	if st.session_state.alt:
+		row.append(st.session_state.alt)
+	else:
+		row.append("")
+
+	if st.session_state.copax:
+		row.append(st.session_state.copax)
+	else:
+		row.append("")
+
+	if st.session_state.copay: 
+		row.append(st.session_state.copay)
+	else:
+		row.append("")
+
+	if st.session_state.cober: 
+		row.append(st.session_state.cober)
+	else:
+		row.append("")
+
+	row.append(st.session_state.grow)
 
 	if st.session_state.photo: 
 		row.append(st.session_state.photo)
@@ -254,6 +273,7 @@ def submit():
 	
 	sh.append_row(row)
 	st.session_state.submitted = True
+	clear_rec()
 
 
 def clear_site():
@@ -267,6 +287,20 @@ def clear_site():
 	st.session_state.lon = None
 	st.session_state.obs_site = ''
 	st.session_state.site_ok = False
+
+def clear_rec():
+	st.session_state.trans = None
+	st.session_state.cuadr = None
+	st.session_state.ind = None
+	st.session_state.ubic = None
+	st.session_state.grow = None
+	st.session_state.morfo = None
+	st.session_state.copax = None
+	st.session_state.copay = None
+	st.session_state.cober = None
+	st.session_state.photo = None
+	st.session_state.obs_ind = None
+	st.session_state.rec_ok = False
 
 
 with st.form(
@@ -384,7 +418,7 @@ if st.session_state.site_ok:
 	with rec_cont.form(
 	#with st.form(
 		"Transecto - registros",
-		clear_on_submit=True
+		clear_on_submit=False
 	):
 
 		st.number_input(
@@ -420,9 +454,9 @@ if st.session_state.site_ok:
 			"Ubicación",
 			key='ubic',
 			value=None,
-			step=1,
-			min_value=1,
-			max_value=50,
+			step=0.1,
+			min_value=0.0,
+			max_value=50.0,
 			placeholder="Ubicación del individuo",
 			help='Ubicación del individuo a lo largo del transecto, en metros',
 		)
@@ -459,7 +493,7 @@ if st.session_state.site_ok:
 			value=None,
 			step=1,
 			placeholder="Diámetro de la copa (cm)",
-			help='Diámetro de la copa del individuo a lo largo del eje horizontal de la parcela.',
+			help='Diámetro de la copa del individuo a lo largo del eje horizontal de la parcela (cm).',
 		)
 
 		st.number_input(
@@ -468,7 +502,7 @@ if st.session_state.site_ok:
 			value=None,
 			step=1,
 			placeholder="Diámetro de la copa (cm)",
-			help='Diámetro de la copa del individuo a lo largo del eje vertical de la parcela.',
+			help='Diámetro de la copa del individuo a lo largo del eje vertical de la parcela (cm).',
 		)
 
 		st.number_input(
@@ -479,7 +513,7 @@ if st.session_state.site_ok:
 			max_value=100,
 			step=1,
 			placeholder="Cobertura del individuo en la parcela (%)",
-			help='Porcentaje del área de la parcela que cubre el individuo. Posibles valores: 1-100%.',
+			help='Porcentaje del área del cuadrante que cubre el individuo. Posibles valores: 1-100%.',
 		)
 
 		st.text_input(
@@ -507,7 +541,7 @@ if st.session_state.site_ok:
 		with pretty_data.container():
 
 			bits = [
-				"Confirmación d información digitada.\n",
+				"Confirmación de la información digitada.\n",
 				f"Responsable(s): {st.session_state.resp}",
 				f"Fecha: {st.session_state.date}",
 				f"Hora inicial: {st.session_state.time0}",
@@ -518,7 +552,7 @@ if st.session_state.site_ok:
 				f"Longitud: {st.session_state.lon}",
 				f"Transecto: {st.session_state.trans}",
 				f"Cuadrante: {st.session_state.cuadr}",
-				f"Ubicación: {st.session_state.ubic}"
+				f"Ubicación: {st.session_state.ubic}",
 				f"Individuo: {st.session_state.ind}",
 				f"Hábito: {st.session_state.grow}",
 				f"Morfo: {st.session_state.morfo}",
@@ -531,15 +565,12 @@ if st.session_state.site_ok:
 
 			st.markdown("\n\n".join(bits))
 
-		st.markdown("""Si los datos arriba son correctos, presione el botón :red[**Guardar**] para enviar los datos.""")
+			st.markdown("""Si los datos arriba son correctos, presione el botón :red[**Guardar**] para enviar los datos.""")
 
-		st.button("Guardar", on_click=submit)
+			st.button("Guardar", on_click=submit)
 
 		if st.session_state.submitted:
 			pretty_data.empty()
-
-
-
 
 	else:	
 		if len(st.session_state.errors_rec) > 0:
@@ -547,7 +578,7 @@ if st.session_state.site_ok:
 			st.info(st.session_state.errors_rec)
 
 		else:
-			pass
+			pretty_data.empty()
 
 elif len(st.session_state.errors_site) > 0:
 	st.session_state.errors_site = "# Error\n\n" + st.session_state.errors_site
