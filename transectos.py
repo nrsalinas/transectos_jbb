@@ -56,7 +56,7 @@ cuadrants = [1, 2, 3]
 
 id_observaciones = []
 
-growth_forms = ['Árbol', 'Arbusto', 'Hierba', 'Enredadera']
+growth_forms = ['Árbol', 'Arbusto', 'Hierba', 'Enredadera', 'Epifita']
 
 pheno = ['Estéril', 'Flor', 'Fruto']
 
