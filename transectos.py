@@ -16,6 +16,15 @@
 #
 ################################################################################
 
+#TODO###########################################################################
+#TODO	Subir el número de transecto al formulario de sitio
+#TODO	Cambiar la documentación en concordancia
+#TODO	Verificar que los datos de los individuos no hayan sido ya cargados,
+#TODO	utilizando el número de transecto, el número de sitio, el número de 
+#TODO	individuo y el número de cuadrante 
+#TODO###########################################################################
+
+
 import streamlit as st
 import pandas as pd
 import gspread
