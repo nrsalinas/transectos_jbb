@@ -81,7 +81,7 @@ st.markdown("""
 
 #### Instrucciones
 
-Inserte primero los datos pertinentes al sitio de estudio en la forma de abajo. Una vez termine de digitar los datos de un sitio, presione el botón :red[**Validar**] para validar los datos. Si existen errores, un mensaje aparecerá indicando la naturaleza del error. Si los datos son correctos, una nueva forma será desplegada con todos los campos relacionados con las propiedades del transecto y los individuos.
+Inserte primero los datos pertinentes al sitio de estudio en la forma de abajo. Una vez termine de digitar los datos de un sitio, presione el botón :red[**Validar**] para validar los datos. Si existen errores, un mensaje aparecerá indicando la naturaleza del error. Si los datos son correctos, una nueva forma será desplegada con todos los campos relacionados con las propiedades de los individuos.
 
 Al terminar de digitar todos los datos de un individuo presione el botón :red[**Validar**] de la segunda forma para verificar la información. Si existen errores a este nivel, la aplicación le indicará que se debe corregir. Si los datos del individuo son correctos, la aplicación desplegará los datos listos para ser insertados. Presione el botón :red[**Guardar**] para que la información sea enviada al repositorio remoto.
 
@@ -91,6 +91,12 @@ Cada vez que se envian datos al repositorio solo se limpia la forma de individuo
 """)
 
 # This doesn't work in Linux -> :blue-background[:red[**Enviar**]] 
+
+
+@st.dialog("Error")
+def error_window(message):
+	st.write(message)
+
 
 def validate_site():
 
@@ -148,7 +154,38 @@ def validate_rec():
 	st.session_state.errors_rec = ""
 	in_trouble = False
 
-	# Número de transecto, hábito y morfo son obligatorios para todos los individuos, sean de cuadrantes o no
+	# First check if sample was already digitized
+
+	th_code = ''
+	if st.session_state.cuadr:
+		th_code = f"{st.session_state.site}_{st.session_state.trans}_{st.session_state.cuadr}_{st.session_state.ind}"
+	else:
+		th_code = f"{st.session_state.site}_{st.session_state.trans}_NA_{st.session_state.ind}"
+	
+	sh = gc.open_by_key(st.secrets.table_link).worksheet("Datos")
+
+	prev = [
+		sh.col_values(1)[1:],
+		sh.col_values(10)[1:],
+		sh.col_values(11)[1:],
+		sh.col_values(12)[1:]
+	]
+
+	for i in range(len(prev[0])):
+		th = ''
+		
+		for p in prev:
+			th += f'{p[i]}_'
+		
+		th = th.rstrip('_')
+		
+		if th == th_code:
+			st.session_state.errors_rec += 'Los datos del individuo ya fueron sistematizados.\n\n'
+			in_trouble = True
+			break
+		
+
+# Número de transecto, hábito y morfo son obligatorios para todos los individuos, sean de cuadrantes o no
 	if st.session_state.trans is None:
 		st.session_state.errors_rec += 'El número de transecto es un campo obligatorio.\n\n'
 		in_trouble = True
@@ -161,10 +198,14 @@ def validate_rec():
 		st.session_state.errors_rec += 'El morfo o descripción de campo es un dato obligatorio.\n\n'
 		in_trouble = True
 
+	if st.session_state.ind is None:
+		st.session_state.errors_rec += 'El número de individuo es un campo obligatorio.\n\n'
+		in_trouble = True
+
 	if st.session_state.cuadr:
-		# Planta de cuadrante: solo es obligatorio hábito, morfo y cobertura
+		# Planta de cuadrante: solo es obligatorio número de individuo, hábito, morfo y cobertura
 		if st.session_state.cober is None:
-			st.session_state.errors_rec += 'El procentaje de cobertura es un dato obligatorio para las plantas de cuadrantes.\n\n'
+			st.session_state.errors_rec += 'El porcentaje de cobertura es un dato obligatorio para las plantas de cuadrantes.\n\n'
 			in_trouble = True
 
 		if st.session_state.alt and st.session_state.alt > 0.5:
@@ -173,10 +214,6 @@ def validate_rec():
 
 	else: 
 		# Planta fuera de cuadrantes: todo es obligatorio, excepto cobertura
-		if st.session_state.ind is None:
-			st.session_state.errors_rec += 'El número de individuo es un campo obligatorio en individuos registrados por fuera de cuadrantes.\n\n'
-			in_trouble = True
-
 		if st.session_state.ubic is None:
 			st.session_state.errors_rec += 'La ubicación del individuo es un campo obligatorio en individuos registrados por fuera de cuadrantes.\n\n'
 			in_trouble = True
@@ -207,7 +244,7 @@ def set_site():
 
 def submit():
 	
-	sh = gc.open_by_key(st.secrets.table_link).worksheet(st.session_state.digitizer)
+	sh = gc.open_by_key(st.secrets.table_link).worksheet("Datos")
 	now = datetime.datetime.now(tz)
 	row = [
 		st.session_state.site,
@@ -231,12 +268,9 @@ def submit():
 	if st.session_state.cuadr:
 		row.append(st.session_state.cuadr)
 	else:
-		row.append("")
+		row.append("NA")
 
-	if st.session_state.ind:
-		row.append(st.session_state.ind)
-	else:
-		row.append("")
+	row.append(st.session_state.ind)
 
 	if st.session_state.ubic:
 		row.append(st.session_state.ubic)
@@ -294,13 +328,13 @@ def clear_site():
 	st.session_state.timef = None
 	st.session_state.site = None
 	st.session_state.sector = ''
+	st.session_state.trans = None
 	st.session_state.lat = None
 	st.session_state.lon = None
 	st.session_state.obs_site = ''
 	st.session_state.site_ok = False
 
 def clear_rec():
-	st.session_state.trans = None
 	st.session_state.cuadr = None
 	st.session_state.ind = None
 	st.session_state.ubic = None
@@ -313,6 +347,12 @@ def clear_rec():
 	st.session_state.obs_ind = None
 	st.session_state.rec_ok = False
 
+
+################################################################################
+#
+#		Formulario de sitio
+#
+################################################################################
 
 with st.form(
 	"Transecto - sitio",
@@ -386,6 +426,16 @@ with st.form(
 	)
 
 	st.number_input(
+		"Transecto",
+		key='trans',
+		value=None,
+		step=1,
+		min_value=1,
+		placeholder="Número de transecto",
+		help='Identificador del transecto',
+	)
+
+	st.number_input(
 		"Latitud", 
 		key="lat",
 		value=None,
@@ -426,21 +476,18 @@ rec_cont = st.empty()
 
 if st.session_state.site_ok:
 
+################################################################################
+#
+#		Formulario de individuo
+#
+################################################################################
+
+	
 	with rec_cont.form(
 	#with st.form(
 		"Transecto - registros",
 		clear_on_submit=False
 	):
-
-		st.number_input(
-			"Transecto",
-			key='trans',
-			value=None,
-			step=1,
-			min_value=1,
-			placeholder="Número de transecto",
-			help='Identificador del transecto',
-		)
 
 		st.selectbox(
 			"Cuadrante",
@@ -585,15 +632,17 @@ if st.session_state.site_ok:
 
 	else:	
 		if len(st.session_state.errors_rec) > 0:
-			st.session_state.errors_rec = "# Error\n\n" + st.session_state.errors_rec
-			st.info(st.session_state.errors_rec)
+			#st.session_state.errors_rec = st.session_state.errors_rec
+			#st.info(st.session_state.errors_rec)
+			error_window(st.session_state.errors_rec)
 
 		else:
 			pretty_data.empty()
 
 elif len(st.session_state.errors_site) > 0:
-	st.session_state.errors_site = "# Error\n\n" + st.session_state.errors_site
-	st.info(st.session_state.errors_site)
+	#st.session_state.errors_site = st.session_state.errors_site
+	#st.info(st.session_state.errors_site)
+	error_window(st.session_state.errors_site)
 
 else: 
 	rec_cont.empty()
