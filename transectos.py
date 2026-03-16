@@ -59,15 +59,17 @@ tabla_sitios = pd.read_csv("sitios.csv")
 tabla_sitios['name'] = tabla_sitios.codigo.apply(str) + '. ' + tabla_sitios.sitio.apply(str)
 sitios = tabla_sitios.name.tolist()
 
-wise_people = ['Lina Corrales', 'Esther Velásquez', 'Lina y Esther']
+wise_people = ['Esther Velásquez']
 
-digitizers = ['Esther', 'Dana', 'Jose', 'Karen', 'Lina', 'Lizeth', 'MariaP', 'Natalia', 'Nelson']
+digitizers = ['Esther', 'Dana', 'MariaP', 'Natalia', 'Cristian', 'Valentina', 'Nelson']
+
+collectors = ['N. Beltrán', 'C. Castro', 'D. González', 'V. Huertas', 'M. P. Mendivil', 'E. Velásquez']
 
 cuadrants = [1, 2, 3]
 
 id_observaciones = []
 
-growth_forms = ['Árbol', 'Arbusto', 'Hierba', 'Enredadera', 'Epifita']
+growth_forms = ['Árbol', 'Arbusto', 'Hierba', 'Enredadera', 'Epifita', 'Emergente', 'Flotante']
 
 pheno = ['Estéril', 'Flor', 'Fruto']
 
@@ -202,6 +204,10 @@ def validate_rec():
 		st.session_state.errors_rec += 'El número de individuo es un campo obligatorio.\n\n'
 		in_trouble = True
 
+	if st.session_state.colector is None or st.session_state.ncol is None:
+		st.session_state.errors_rec += 'Todos los registros deben estar asociados a un voucher de herbario, por lo cual los campos `Nombre del colector` y `Número de colección` son obligatorios.\n\n'
+		in_trouble = True
+
 	if st.session_state.cuadr:
 		# Planta de cuadrante: solo es obligatorio número de individuo, hábito, morfo y cobertura
 		if st.session_state.cober is None:
@@ -226,8 +232,8 @@ def validate_rec():
 			st.session_state.errors_rec += 'Individuos de alturas menores o iguales a 0.5 m solo son registrados exclusivamente en cuadrantes.\n\n'
 			in_trouble = True
 
-		if st.session_state.copax is None or st.session_state.copay is None:
-			st.session_state.errors_rec += 'Los diámetros de copas son obligatorios para individuos de alturas mayores a 0.5 m.\n\n'
+		if st.session_state.copax is None:
+			st.session_state.errors_rec += 'La extensión de la copa sobre el transecto es obligatoria para individuos de alturas mayores a 0.5 m.\n\n'
 			in_trouble = True
 
 
@@ -289,22 +295,21 @@ def submit():
 	else:
 		row.append("")
 
-	if st.session_state.copay: 
-		row.append(st.session_state.copay)
-	else:
-		row.append("")
+#	if st.session_state.copay: 
+#		row.append(st.session_state.copay)
+#	else:
+#		row.append("")
 
 	if st.session_state.cober: 
 		row.append(st.session_state.cober)
 	else:
 		row.append("")
 
-	row.append(st.session_state.grow)
-
-	if st.session_state.photo: 
-		row.append(st.session_state.photo)
-	else:
-		row.append("")
+	row += [
+		st.session_state.grow,
+		st.session_state.colector,
+		st.session_state.ncol
+		]
 
 	if st.session_state.obs_ind: 
 		row.append(st.session_state.obs_ind)
@@ -341,9 +346,10 @@ def clear_rec():
 	st.session_state.grow = None
 	st.session_state.morfo = None
 	st.session_state.copax = None
-	st.session_state.copay = None
+	#st.session_state.copay = None
 	st.session_state.cober = None
-	st.session_state.photo = None
+	st.session_state.colector = None
+	st.session_state.ncol = None
 	st.session_state.obs_ind = None
 	st.session_state.rec_ok = False
 
@@ -546,22 +552,22 @@ if st.session_state.site_ok:
 		)
 
 		st.number_input(
-			"Copa X",
+			"Copa",
 			key='copax',
 			value=None,
 			step=1,
-			placeholder="Diámetro de la copa (cm)",
-			help='Diámetro de la copa del individuo a lo largo del eje horizontal de la parcela (cm).',
+			placeholder="Proyección de la copa (cm)",
+			help='Longitud de la proyección de la copa del individuo sobre el transecto (cm).',
 		)
 
-		st.number_input(
-			"Copa Y",
-			key='copay',
-			value=None,
-			step=1,
-			placeholder="Diámetro de la copa (cm)",
-			help='Diámetro de la copa del individuo a lo largo del eje vertical de la parcela (cm).',
-		)
+		#st.number_input(
+		#	"Copa Y",
+		#	key='copay',
+		#	value=None,
+		#	step=1,
+		#	placeholder="Diámetro de la copa (cm)",
+		#	help='Diámetro de la copa del individuo a lo largo del eje vertical de la parcela (cm).',
+		#)
 
 		st.number_input(
 			"Cobertura",
@@ -574,12 +580,24 @@ if st.session_state.site_ok:
 			help='Porcentaje del área del cuadrante que cubre el individuo. Posibles valores: 1-100%.',
 		)
 
-		st.text_input(
-			"Foto",
-			key='photo',
+		st.selectbox(
+			"Colector",
+			collectors,
+			key='colector',
+			index=None,
+			placeholder='Seleccione un colector',
+			help='Nombre del investigador de flora que numeró el voucher de herbario.'
+		)
+
+		st.number_input(
+			"Número_colección",
+			key='ncol',
 			value=None,
-			placeholder='Fotografía del individuo',
-			help='Nombre del archivo fotográfico.'
+			min_value=1,
+			max_value=10000,
+			step=1,
+			placeholder="Número",
+			help='Número de colección del voucher de herbario.',
 		)
 
 		st.text_input(
@@ -615,15 +633,17 @@ if st.session_state.site_ok:
 				f"Hábito: {st.session_state.grow}",
 				f"Morfo: {st.session_state.morfo}",
 				f"Altura: {st.session_state.alt}",
-				f"Copa X: {st.session_state.copax}",
-				f"Copa Y: {st.session_state.copay}",
+				f"Copa: {st.session_state.copax}",
+				#f"Copa Y: {st.session_state.copay}",
 				f"Cobertura: {st.session_state.cober}",
+				f"Colector: {st.session_state.colector}",
+				f"Número de colección: {st.session_state.ncol}",
 				f"Observaciones individuo: {st.session_state.obs_ind}",
 			]
 
 			st.markdown("\n\n".join(bits))
 
-			st.markdown("""Si los datos arriba son correctos, presione el botón :red[**Guardar**] para enviar los datos.""")
+			st.markdown("""Si los datos presentados arriba son correctos, presione el botón :red[**Guardar**] para enviar los datos.""")
 
 			st.button("Guardar", on_click=submit)
 
